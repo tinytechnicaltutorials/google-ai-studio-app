@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Identifier</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    #container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    input[type="file"] {
+      margin-bottom: 10px;
+    }
+
+    #imagePreview {
+      max-width: 300px;
+      max-height: 300px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    #description {
+      margin-top: 10px;
+      font-style: italic;
+      color: #555;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #3e8e41;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Image Identifier</h1>
+    <input type="file" id="imageUpload" accept="image/*">
+    <img id="imagePreview" src="#" alt="Image Preview" style="display: none;">
+    <button id="identifyButton" disabled>Identify</button>
+    <p id="description"></p>
+  </div>
+
+  <script>
+    const imageUpload = document.getElementById('imageUpload');
+    const imagePreview = document.getElementById('imagePreview');
+    const identifyButton = document.getElementById('identifyButton');
+    const description = document.getElementById('description');
+
+    let file;
+
+    imageUpload.addEventListener('change', (e) => {
+      file = e.target.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+          imagePreview.src = event.target.result;
+          imagePreview.style.display = 'block';
+          identifyButton.disabled = false;
+        }
+
+        reader.readAsDataURL(file);
+      } else {
+        imagePreview.src = '#';
+        imagePreview.style.display = 'none';
+        identifyButton.disabled = true;
+      }
+    });
+
+    identifyButton.addEventListener('click', async () => {
+      description.textContent = 'Identifying...';
+
+      const apiKey = 'YOUR_GEMINI_API_KEY'; // Replace with your Gemini API key
+
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('apiKey', apiKey);
+
+
+      try {
+        const response = await fetch('/identify', { // Changed to relative path for server-side handling
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        description.textContent = data.description;
+      } catch (error) {
+        console.error('Error:', error);
+        description.textContent = 'Error identifying image.';
+      }
+    });
+  </script>
+</body>
+</html>
